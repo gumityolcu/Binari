@@ -60,7 +60,7 @@ def get_aruz(word):
             else:
                 aruz.append("-")
         else:
-            if (not isVowel(i[-2])) or (isLong(i[-2]) and i[-2]!="n"):
+            if (not isVowel(i[-2])) or (isLong(i[-2]) and i[-1] != "n"):
                 aruz.append("-.")
             else:
                 aruz.append("-")
