@@ -64,6 +64,7 @@ def get_aruz(word):
                 aruz.append("-.")
             else:
                 aruz.append("-")
+
     return aruz
 
 s=get_aruz("denemân")
