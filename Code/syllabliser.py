@@ -19,7 +19,7 @@ def isVowel(c):
 
 def get_syllables(word):
     if len(word) < 3:
-        return word
+        return [word]
     inSyllable = [-1] * len(word)
     vowelCount = 0
     vowelPoss = list()
@@ -67,6 +67,3 @@ def get_aruz(word):
 
     return aruz
 
-s=get_aruz("denemân")
-for i in range(0,len(s)):
-    print(str(i)+": "+s[i])
