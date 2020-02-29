@@ -3,9 +3,13 @@ import random
 
 def computeErr(arr1, arr2):
     err = 0
+    MAX=10000
     for i in range(0, len(arr1)):
-        if arr1[i] != arr2[i]:
-            err = err + 1
+        if arr1[i]!=arr2[i]:
+            if arr1[i]=="-" and arr2[i]==".":
+                err = err+1
+            else:
+                return MAX
     return err
 
 class FST:
@@ -44,13 +48,16 @@ class FST:
                         self.rootStates[s].append((i, len(longMetre)))
 
 
-vezn=["-",".","-","-","-",".","-","-","-",".","-","-","-",".","-"]
-fst = FST(vezn, "./dummy")
-state=0
-strr=""
-while state<len(vezn):
-    r=random.randint(0,len(fst.rootStates[state])-1)
-    word,step=fst.rootStates[state][r]
-    strr+=fst.words[word][0]+" "
-    state=state+step
-print(strr)
+mefulumefailu=["-","-",".",".","-","-",".",".","-","-",".",".","-","-"]
+failatunfailatun=["-",".","-","-","-",".","-","-","-",".","-","-","-",".","-"]
+vezn=failatunfailatun
+fst = FST(vezn, "./revani-words")
+for arse in range(0,15):
+    state=0
+    strr=""
+    while state<len(vezn):
+        r=random.randint(0,len(fst.rootStates[state])-1)
+        word,step=fst.rootStates[state][r]
+        strr+=fst.words[word][0]+" "
+        state=state+step
+    print(strr)

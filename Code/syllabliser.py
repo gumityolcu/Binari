@@ -13,8 +13,8 @@ Kelime içinde yan yana gelen üç ünsüz harften ilk ikisi kendinden önceki �
 
 
 def isVowel(c):
-    return (c == "a") or (c == "â") or (c == "e") or (c == "ı") or (c == "i") or (c == "î") or (c == "o") or (
-            c == "ö") or (c == "û") or (c == "u") or (c == "ü")
+    return (c == "a") or (c == "ā") or (c == "e") or (c == "ı") or (c == "i") or (c == "ī") or (c == "o") or (
+            c == "ö") or (c == "ū") or (c == "u") or (c == "ü")
 
 
 def get_syllables(word):
@@ -48,9 +48,12 @@ def get_syllables(word):
     return syllables
 
 def isLong(c):
-    return (c=="â") or (c=="î") or (c=="û")
+    return (c=="ā") or (c=="ī") or (c=="ū")
 
 def get_aruz(word):
+    word=word.replace('·','')
+    word=word.replace('-','')
+    word=word.replace('\'','')
     sylls=get_syllables(word)
     aruz=list()
     for i in sylls:
@@ -67,3 +70,4 @@ def get_aruz(word):
 
     return aruz
 
+print(get_aruz("şīrīnüñ"))
