@@ -1,6 +1,8 @@
 import syllabliser
 import random
 
+mefulumefailu = ["-", "-", ".", ".", "-", "-", ".", ".", "-", "-", ".", ".", "-", "-"]
+failatunfailautun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-"]
 
 def computeErr(arr1, arr2):
     err = 0
@@ -20,40 +22,56 @@ class FST:
         # Load from already existing file
         pass
 
-    def __init__(self, metre, wordsPath):
-        self.errThreshold = 0
+    def __init__(self, metre, wordsPath, errTh=0):
+        self.errThreshold = errTh
         self.metre = metre
+        
+        # Read vocabulary
         f = open(wordsPath, 'r')
         plainWords = f.readlines()
         f.close()
-        self.words = list()
+        
+        # Create vocabulary
+        self.vocabulary = list()
         for x in plainWords:
             x = x.strip()
-            self.words.append((x, syllabliser.get_aruz(x)))
-        self.words.append(("<endLine>", []))
-        endLine = len(self.words) - 1
-        self.words.append(("<endCouplet>", []))
-        endCouplet = len(self.words) - 1
+            self.vocabulary.append((x, syllabliser.get_aruz(x)))
+        self.vocabulary.append(("<endLine>", []))
+        endLine = len(self.vocabulary) - 1
+        self.vocabulary.append(("<endCouplet>", []))
+        endCouplet = len(self.vocabulary) - 1
 
         self.lineLength = len(metre)
         self.rootMachine = [[] for i in range(self.lineLength + 1)]
         self.rootMachine[self.lineLength].append((endLine, 1))
 
-        for i in range(0, len(self.words) - 2):  # Do not iterate over the <endCouplet> and <endLine> tokens
-            (wordd, met) = self.words[i]
-            longMetre = syllabliser.elongateMetre(met)
+        # For each word in the vocabulary
+        for i in range(0, len(self.vocabulary) - 2):  # Do not iterate over the <endCouplet> and <endLine> tokens
+            (word, met) = self.vocabulary[i]
+            # Temporarily use -. for lines ending with a long vowel followed by a consonant
+            met = syllabliser.elongateMetre(met)
 
+            # For each state of the root machine
             for s in range(0, len(self.rootMachine) - 1):
-                if not s + len(longMetre) > len(self.metre):
-                    if not computeErr(self.metre[s:s + len(longMetre)], longMetre) > self.errThreshold:
-                        self.rootMachine[s].append((i, len(longMetre)))
+                # If you can use the word at state s without crossing the ending of the metre
+                if not s + len(met) > len(self.metre):
+                    # If the word fits the rhythmic metre within a given error
+                    if not computeErr(self.metre[s:s + len(met)], met) > self.errThreshold:
+                        # Add the word to the machine as (word, distance to nextState)
+                        self.rootMachine[s].append((i, len(met)))
+        # Copy and concatenate a copy of the machine to the end
         self.rootMachine += self.rootMachine
+        # Finish the machine for a couplet
         self.rootMachine.append([(endCouplet, 0)])
-        self.states = len(self.rootMachine)
-        self.machine = self.rootMachine
+        # Update internal variables for number of states and the machine
+        self.reset()
+
+    def save(self):
+        pass
 
     def reset(self):
         self.machine = self.rootMachine
+        self.states = len(self.machine)
 
     def generate(self):
         state = 0
@@ -61,7 +79,7 @@ class FST:
         while state < fst.states:
             r = random.randint(0, len(fst.machine[state]) - 1)
             word, step = fst.machine[state][r]
-            strr += fst.words[word][0] + " "
+            strr += fst.vocabulary[word][0] + " "
             state = state + step
             if step == 0:
                 state = state + 1
@@ -76,9 +94,9 @@ class FST:
         return self.format(self.generate())
 
     def get_word(self, word):
-        for i in range(0, len(self.words)):
-            if self.words[i][0] == word:
-                return (i, self.words[i][1])
+        for i in range(0, len(self.vocabulary)):
+            if self.vocabulary[i][0] == word:
+                return (i, self.vocabulary[i][1])
         return -1
 
     def constrain(self, line, inWords):
@@ -102,8 +120,8 @@ class FST:
         print(interval)
 
 
-mefulumefailu = ["-", "-", ".", ".", "-", "-", ".", ".", "-", "-", ".", ".", "-", "-"]
-failatunx4 = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-"]
 vezn = failatunx4
 fst = FST(vezn, "./revani-words")
-fst.constrain(1, 'ḥüsndür bir ḥüsninüñ')
+for i in range(0,10):
+    print(fst.generate().replace("<endLine>","\n").replace("<endCouplet>","\n-------\n"))
+#fst.constrain(1, 'ḥüsndür bir ḥüsninüñ')

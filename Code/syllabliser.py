@@ -10,33 +10,45 @@ Kelime içinde yan yana gelen üç ünsüz harften ilk ikisi kendinden önceki �
 üçüncüsü kendinden sonraki ünlüyle hece kurar: alt-lık, Türk-çe, kork-mak vb.
 
 """
-
+vowels = ["a", "ā", "â", "e", "ı", "i", "ī", "î", "o", "ö", "ô", "u", "ū", "û", "ü"]
+longVowels = ["ā", "â", "ī", "î", "ô", "ū", "û"]
 
 def isVowel(c):
-    return (c == "a") or (c == "ā") or (c == "e") or (c == "ı") or (c == "i") or (c == "ī") or (c == "o") or (
-            c == "ö") or (c == "ū") or (c == "u") or (c == "ü")
+    return c in vowels
 
+def isLong(c):
+    return c in longVowels
 
 def get_syllables(word):
     if len(word) < 3:
         return [word]
+    # We will assign each character to a syllable in the array inSyllable
     inSyllable = [-1] * len(word)
     vowelCount = 0
     vowelPoss = list()
     syllables = list()
+    # Count the number of vowels to find the number of syllables
     for c in range(0, len(word)):
         if isVowel(word[c]):
             vowelCount = vowelCount + 1
             inSyllable[c] = vowelCount
             vowelPoss.append(c)
+            # Add the vowels of the syllables
             syllables.append(word[c])
+
+    # First character belongs to the first syllable
     inSyllable[0] = 1
     if not isVowel(word[0]):
+        # Add the character to the first syllable if not already added
         syllables[0] = word[0] + syllables[0]
 
+    # Last character belongs to the last syllable
     inSyllable[-1] = vowelCount
     if not isVowel(word[-1]):
+        # Add the character to the last syllable if not already added
         syllables[-1] = syllables[-1] + word[-1]
+
+    # Assign syllables and edit them according to the logical rule
     for c in range(1, len(word) - 1):
         if not isVowel(word[c]):
             if isVowel(word[c + 1]):
@@ -45,11 +57,8 @@ def get_syllables(word):
             else:
                 inSyllable[c] = inSyllable[c - 1]
                 syllables[inSyllable[c] - 1] = syllables[inSyllable[c] - 1] + word[c]
+
     return syllables
-
-
-def isLong(c):
-    return (c == "ā") or (c == "ī") or (c == "ū")
 
 
 def elongateMetre(met):
