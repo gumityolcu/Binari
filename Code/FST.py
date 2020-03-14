@@ -1,8 +1,11 @@
 import syllabliser
 import random
+import copy
 
 mefulumefailu = ["-", "-", ".", ".", "-", "-", ".", ".", "-", "-", ".", ".", "-", "-"]
-failatunfailautun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-"]
+failatunfailatun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-"]
+failatun = ["-", ".", "-", "-"]
+
 
 def computeErr(arr1, arr2):
     err = 0
@@ -25,12 +28,12 @@ class FST:
     def __init__(self, metre, wordsPath, errTh=0):
         self.errThreshold = errTh
         self.metre = metre
-        
+
         # Read vocabulary
         f = open(wordsPath, 'r')
         plainWords = f.readlines()
         f.close()
-        
+
         # Create vocabulary
         self.vocabulary = list()
         for x in plainWords:
@@ -60,7 +63,7 @@ class FST:
                         # Add the word to the machine as (word, distance to nextState)
                         self.rootMachine[s].append((i, len(met)))
         # Copy and concatenate a copy of the machine to the end
-        self.rootMachine += self.rootMachine
+        self.rootMachine += copy.deepcopy(self.rootMachine)
         # Finish the machine for a couplet
         self.rootMachine.append([(endCouplet, 0)])
         # Update internal variables for number of states and the machine
@@ -70,11 +73,12 @@ class FST:
         pass
 
     def reset(self):
-        self.machine = self.rootMachine
+        #temp=copy.deepcopy(self.rootMachine)
+        self.machine = copy.deepcopy(self.rootMachine)
         self.states = len(self.machine)
 
-    def generate(self):
-        state = 0
+    def generate(self, initial_state=0):
+        state = initial_state
         strr = ""
         while state < fst.states:
             r = random.randint(0, len(fst.machine[state]) - 1)
@@ -85,43 +89,76 @@ class FST:
                 state = state + 1
         return strr
 
+    # Format coupler
     def format(self, str):
         str = str.replace(" <endLine> ", "\n")
         str = str.replace("<endCouplet> ", "")
         return str
 
+    # Generate and format output
     def formatted(self):
         return self.format(self.generate())
 
-    def get_word(self, word):
+    def get_word_from_id(self, id):
+        return self.vocabulary[id]
+
+    def get_word_from_string(self, word):
         for i in range(0, len(self.vocabulary)):
             if self.vocabulary[i][0] == word:
                 return (i, self.vocabulary[i][1])
         return -1
 
     def constrain(self, line, inWords):
-        intervals = [(0, len(self.metre)), (len(self.metre)+1, 2*(len(self.metre))+1)]
-        interval = intervals[line]
-        if line == 1:
-            offset = len(self.metre)
+        interval_init = 0 + line * (len(self.metre) + 1)
+        interval_end = interval_init + len(self.metre)
+
         wordList = inWords.split(" ")
+        wordList.reverse()
         getWords = []
         words = []
         for w in wordList:
-            wrd = self.get_word(w)
+            wrd = self.get_word_from_string(w)
+            # If the w is found in the vocabulary
             if wrd != -1:
                 getWords.append(wrd)
         for w in getWords:
+            # w = (word_id, word_aruz)
+            # Use elongated aruz patterns
             words.append((w[0], syllabliser.elongateMetre(w[1])))
-        countSyl=0
+        rhymeLength = 0
         for w in words:
-            countSyl+=len(w[1])
-        interval=(interval[0], interval[1]-countSyl)
-        print(interval)
+            rhymeLength += len(w[1])
+
+        # For each state in the constrained line's interval
+        for s in range(interval_init, interval_end):
+            # If a word in this state, *followed by the rhyme words* passes the end of the line
+            w = 0
+            while w < len(self.machine[s]):
+                wrdLen = self.machine[s][w][1]
+                if s + rhymeLength > interval_end:
+                    self.machine[s]=[]
+                elif s + wrdLen + rhymeLength > interval_end:
+                    self.machine[s].pop(w)
+                else:
+                    # Only increment w when no item has been deleted
+                    w = w + 1
+        # All wrong words are deleted, time to add the rhyme words to the machine
+        curState = interval_end
+        for w in words:
+            length = len(w[1])
+            curState = curState - length
+            self.machine[curState].append((w[0], length))
 
 
-vezn = failatunx4
+vezn = failatunfailatun
 fst = FST(vezn, "./revani-words")
+for s in fst.machine:
+    print(s)
+fst.constrain(0, 'āşiyān eyler beni')
+fst.constrain(1, 'zamān eyler beni')
+print("\n*************\n")
+for s in fst.machine:
+    print(s)
 for i in range(0,10):
-    print(fst.generate().replace("<endLine>","\n").replace("<endCouplet>","\n-------\n"))
-#fst.constrain(1, 'ḥüsndür bir ḥüsninüñ')
+    pass
+    print(fst.formatted())

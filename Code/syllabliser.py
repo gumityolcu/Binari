@@ -13,11 +13,14 @@ Kelime içinde yan yana gelen üç ünsüz harften ilk ikisi kendinden önceki �
 vowels = ["a", "ā", "â", "e", "ı", "i", "ī", "î", "o", "ö", "ô", "u", "ū", "û", "ü"]
 longVowels = ["ā", "â", "ī", "î", "ô", "ū", "û"]
 
+
 def isVowel(c):
     return c in vowels
 
+
 def isLong(c):
     return c in longVowels
+
 
 def get_syllables(word):
     if len(word) < 3:
