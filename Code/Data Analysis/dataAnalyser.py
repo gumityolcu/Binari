@@ -5,7 +5,7 @@ def OTAPAnalyser():
     extent = 0
     for l in lines:
         cont = True
-        l = l.strip()
+        l = l.strip().lower()
         if extent == 0:
             if l == "4":
                 extent = 4
@@ -16,5 +16,6 @@ def OTAPAnalyser():
             else:
                 extent = 2
         if cont:
-            print(l.lower())
             extent = extent - 1
+
+OTAPAnalyser()
