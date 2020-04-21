@@ -25,6 +25,8 @@ def isLong(c):
 def get_syllables(word):
     if len(word) < 3:
         return [word]
+    if word[0:8]=="<mahlas>":
+        return ["<mahlas>"]+get_syllables(word[8:])
     # We will assign each character to a syllable in the array inSyllable
     inSyllable = [-1] * len(word)
     vowelCount = 0
@@ -82,7 +84,9 @@ def get_aruz(word):
     sylls = get_syllables(word)
     aruz = list()
     for i in sylls:
-        if isVowel(i[-1]):
+        if i == "<mahlas>":
+            aruz+=[".","-","-"]
+        elif isVowel(i[-1]):
             if not isLong(i[-1]):
                 aruz.append(".")
             else:
@@ -95,3 +99,8 @@ def get_aruz(word):
 
     return aruz
 
+if __name__=="__main__":
+    print(get_aruz("<mahlas>den"))
+    print(get_aruz("<mahlas>kulun"))
+    print(get_aruz("<mahlas>yi"))
+    print(get_aruz("<mahlas>li"))

@@ -7,15 +7,16 @@ failatunfailatun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", 
 failatun = ["-", ".", "-", "-"]
 
 
-def computeErr(arr1, arr2):
+def computeErr(arr1, arr2, EOL=False):
     err = 0
     MAX = 10000
     for i in range(0, len(arr1)):
         if arr1[i] != arr2[i]:
-            if arr1[i] == "-" and arr2[i] == ".":
-                err = err + 1
-            else:
-                return MAX
+            if not (i==len(arr1)-1 and EOL): # If the mistake is not at the end of the line
+                if arr1[i] == "-" and arr2[i] == ".":
+                    err = err + 1
+                else:
+                    return MAX
     return err
 
 
@@ -58,8 +59,8 @@ class FST:
             for s in range(0, len(self.rootMachine) - 1):
                 # If you can use the word at state s without crossing the ending of the metre
                 if not s + len(met) > len(self.metre):
-                    # If the word fits the rhythmic metre within a given error
-                    if not computeErr(self.metre[s:s + len(met)], met) > self.errThreshold:
+                    # If the word fits the rhythmic metre within a given error (accounting for the fact that the last syllable is allowed to be any kind of syllable)
+                    if not computeErr(self.metre[s:s + len(met)], met, (s+len(met)==len(self.metre))) > self.errThreshold:
                         # Add the word to the machine as (word, distance to nextState)
                         self.rootMachine[s].append((i, len(met)))
         # Copy and concatenate a copy of the machine to the end
@@ -80,10 +81,10 @@ class FST:
     def generate(self, initial_state=0):
         state = initial_state
         strr = ""
-        while state < fst.states:
+        while state < self.states:
             r = random.randint(0, len(fst.machine[state]) - 1)
-            word, step = fst.machine[state][r]
-            strr += fst.vocabulary[word][0] + " "
+            word, step = self.machine[state][r]
+            strr += self.vocabulary[word][0] + " "
             state = state + step
             if step == 0:
                 state = state + 1
@@ -121,6 +122,8 @@ class FST:
             # If the w is found in the vocabulary
             if wrd != -1:
                 getWords.append(wrd)
+            else:
+                raise ValueError("Word \"" + w +"\" not found in the vocabulary")
         for w in getWords:
             # w = (word_id, word_aruz)
             # Use elongated aruz patterns
@@ -149,16 +152,16 @@ class FST:
             curState = curState - length
             self.machine[curState].append((w[0], length))
 
-
-vezn = failatunfailatun
-fst = FST(vezn, "./revani-words")
-for s in fst.machine:
-    print(s)
-fst.constrain(0, 'āşiyān eyler beni')
-fst.constrain(1, 'zamān eyler beni')
-print("\n*************\n")
-for s in fst.machine:
-    print(s)
-for i in range(0,10):
-    pass
-    print(fst.formatted())
+if __name__=='__main__':
+    vezn = failatunfailatun
+    fst = FST(vezn, "./Code/revani-words")
+    for s in fst.machine:
+        print(s)
+    #fst.constrain(0, 'āşiyān eyler beni')
+    fst.constrain(1, 'zamān eyler beni')
+    print("\n*************\n")
+    for s in fst.machine:
+        print(s)
+    for i in range(0,10):
+        pass
+        print(fst.formatted())
