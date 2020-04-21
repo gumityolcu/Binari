@@ -57,9 +57,15 @@ class FST:
 
             # For each state of the root machine
             for s in range(0, len(self.rootMachine) - 1):
+                if word=="<izafe>":
+                    if s < len(self.rootMachine) - 2:
+                    # add <izafe> as usable for all syllables except the last syllable of a line
+                        self.rootMachine[s].append((i,1))
                 # If you can use the word at state s without crossing the ending of the metre
-                if not s + len(met) > len(self.metre):
-                    # If the word fits the rhythmic metre within a given error (accounting for the fact that the last syllable is allowed to be any kind of syllable)
+                elif not s + len(met) > len(self.metre):
+                    # If the word fits the rhythmic metre within a given error
+                    # (accounting for the fact that the last syllable is allowed
+                    # to be any kind of syllable)
                     if not computeErr(self.metre[s:s + len(met)], met, (s+len(met)==len(self.metre))) > self.errThreshold:
                         # Add the word to the machine as (word, distance to nextState)
                         self.rootMachine[s].append((i, len(met)))
@@ -156,12 +162,14 @@ if __name__=='__main__':
     vezn = failatunfailatun
     fst = FST(vezn, "./Code/revani-words")
     for s in fst.machine:
-        print(s)
+        pass
+        #print(s)
     #fst.constrain(0, 'āşiyān eyler beni')
     fst.constrain(1, 'zamān eyler beni')
     print("\n*************\n")
     for s in fst.machine:
+        pass
         print(s)
     for i in range(0,10):
         pass
-        print(fst.formatted())
+        #print(fst.formatted())

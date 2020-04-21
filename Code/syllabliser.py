@@ -26,7 +26,12 @@ def get_syllables(word):
     if len(word) < 3:
         return [word]
     if word[0:8]=="<mahlas>":
-        return ["<mahlas>"]+get_syllables(word[8:])
+        ret=["<mahlas>"]
+        if word[8:]!='':
+            ret+=get_syllables(word[8:])
+        return ret
+    if word=="<izafe>":
+        return ["<izafe>"]
     # We will assign each character to a syllable in the array inSyllable
     inSyllable = [-1] * len(word)
     vowelCount = 0
@@ -86,6 +91,8 @@ def get_aruz(word):
     for i in sylls:
         if i == "<mahlas>":
             aruz+=[".","-","-"]
+        elif i=="<izafe>":
+            aruz.append(".") # This is a placeholder, the <izafe> tokens is not compared against the actual metre in the FST implementation
         elif isVowel(i[-1]):
             if not isLong(i[-1]):
                 aruz.append(".")
