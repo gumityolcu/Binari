@@ -43,10 +43,10 @@ def createOTAPDataFromIndividualTexts():
                     dataUnit=[]
     f=open("data/OTAP clean data/total", "w")
     for s in data:
-        f.write("<beginCouplet>")
+        f.write("<beginCouplet> ")
         for l in s:
             f.write(l)
-            f.write("<endLine>")
+            f.write(" <endLine> ")
         f.write("<endCouplet>\n")
     f.close()
 
