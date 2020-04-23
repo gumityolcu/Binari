@@ -84,6 +84,15 @@ class FST:
         self.machine = copy.deepcopy(self.rootMachine)
         self.states = len(self.machine)
 
+    def reverse(self):
+        stateCount=len(self.machine)
+        newMachine=[[] for i in range(0, stateCount)]
+        for s in range(0, stateCount):
+            for a in self.machine[s]:
+                newMachine[stateCount-1-s].append((a[1],a[0]))
+        self.machine=newMachine
+        return self.machine
+
     def generate(self, initial_state=0):
         state = initial_state
         strr = ""
@@ -140,13 +149,13 @@ class FST:
 
         # For each state in the constrained line's interval
         for s in range(interval_init, interval_end):
+            if s + rhymeLength > interval_end:
+                self.machine[s] = []
             # If a word in this state, *followed by the rhyme words* passes the end of the line
             w = 0
             while w < len(self.machine[s]):
                 wrdLen = self.machine[s][w][1]
-                if s + rhymeLength > interval_end:
-                    self.machine[s]=[]
-                elif s + wrdLen + rhymeLength > interval_end:
+                if s + wrdLen + rhymeLength > interval_end:
                     self.machine[s].pop(w)
                 else:
                     # Only increment w when no item has been deleted
@@ -159,17 +168,17 @@ class FST:
             self.machine[curState].append((w[0], length))
 
 if __name__=='__main__':
-    vezn = failatunfailatun
+    vezn = ["-","-","-",".",".","-",".","-"]
     fst = FST(vezn, "./Code/revani-words")
     for s in fst.machine:
         pass
         #print(s)
     #fst.constrain(0, 'āşiyān eyler beni')
-    fst.constrain(1, 'zamān eyler beni')
+    fst.constrain(1, 'zamān zamān')
     print("\n*************\n")
     for s in fst.machine:
         pass
-        print(s)
-    for i in range(0,10):
-        pass
-        #print(fst.formatted())
+    str=""
+    while not "izafe" in str:
+        str=fst.formatted()
+        print(str)

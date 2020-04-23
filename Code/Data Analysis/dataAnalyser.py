@@ -1,3 +1,6 @@
+
+
+
 def standardise(fName):
     path = "./data/" + fName
     f = open(path)
@@ -10,8 +13,42 @@ def standardise(fName):
         l2=l2.replace("ā","â")
         l2=l2.replace("ā","â")
 
-
-
+def createOTAPDataFromIndividualTexts():
+    names=["mihri","necati","revani-all"]
+    data=list()
+    extent=0
+    for i in names:
+        f=open("data/OTAP clean data/"+i)
+        linez=f.readlines()
+        f.close()
+        dataUnit=list()
+        for l in linez:
+            l = l.strip().lower()
+            cont=True
+            if extent == 0:
+                if l == "4":
+                    extent = 4
+                    cont=False
+                elif l == "5":
+                    extent = 5
+                    cont=False
+                else:
+                    extent = 2
+            if cont:
+                l = l[3:]
+                dataUnit.append(l)
+                extent = extent - 1
+                if extent==0:
+                    data.append(dataUnit)
+                    dataUnit=[]
+    f=open("data/OTAP clean data/total", "w")
+    for s in data:
+        f.write("<beginCouplet>")
+        for l in s:
+            f.write(l)
+            f.write("<endLine>")
+        f.write("<endCouplet>\n")
+    f.close()
 
 def OTAPAnalyser(fName, writeToFile):
     path = "./data/" + fName
@@ -87,12 +124,4 @@ def safahatAnalyser(writeToFile=True):
         output.close()
     return vocab
 
-v=safahatAnalyser()
-total=len(v.keys())
-print(len(v.keys()))
-th=15
-count=0
-for k in v.keys():
-    if v[k]>th:
-        count+=1
-print(count/total)
+createOTAPDataFromIndividualTexts()
