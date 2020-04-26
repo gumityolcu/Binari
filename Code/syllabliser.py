@@ -61,7 +61,10 @@ def get_syllables(word):
     # Assign syllables and edit them according to the logical rule
     for c in range(1, len(word) - 1):
         if not isVowel(word[c]):
-            if isVowel(word[c + 1]):
+            if word[c]=="'":
+                # ' symbol is always in the second position after the letter n in our data, thus the index c-1 will never go below 0
+                inSyllable[c] = inSyllable[c-1]
+            elif isVowel(word[c + 1]):
                 inSyllable[c] = inSyllable[c + 1]
                 syllables[inSyllable[c] - 1] = word[c] + syllables[inSyllable[c] - 1]
             else:
@@ -108,6 +111,6 @@ def get_aruz(word):
 
 if __name__=="__main__":
     print(get_aruz("<mahlas>den"))
-    print(get_aruz("<mahlas>kulun"))
-    print(get_aruz("<mahlas>yi"))
-    print(get_aruz("<mahlas>li"))
+    print(get_aruz("n'ola"))
+    print(get_aruz("n'için"))
+    print(get_aruz("n'eyleyedurayım"))

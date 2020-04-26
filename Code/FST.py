@@ -40,6 +40,8 @@ class FST:
         for x in plainWords:
             x = x.strip()
             self.vocabulary.append((x, syllabliser.get_aruz(x)))
+        self.vocabulary.append(("<beginCouplet>",[]))
+        beginCouplet = len(self.vocabulary) - 1
         self.vocabulary.append(("<endLine>", []))
         endLine = len(self.vocabulary) - 1
         self.vocabulary.append(("<endCouplet>", []))
@@ -50,7 +52,7 @@ class FST:
         self.rootMachine[self.lineLength].append((endLine, 1))
 
         # For each word in the vocabulary
-        for i in range(0, len(self.vocabulary) - 2):  # Do not iterate over the <endCouplet> and <endLine> tokens
+        for i in range(0, len(self.vocabulary) - 3):  # Do not iterate over the <beginCouplet>, <endCouplet> and <endLine> tokens
             (word, met) = self.vocabulary[i]
             # Temporarily use -. for lines ending with a long vowel followed by a consonant
             met = syllabliser.elongateMetre(met)
@@ -73,6 +75,8 @@ class FST:
         self.rootMachine += copy.deepcopy(self.rootMachine)
         # Finish the machine for a couplet
         self.rootMachine.append([(endCouplet, 0)])
+        # Add the beginning state of the machine
+        self.rootMachine.insert(0, [(beginCouplet,1)])
         # Update internal variables for number of states and the machine
         self.reset()
 
@@ -125,7 +129,7 @@ class FST:
         return -1
 
     def constrain(self, line, inWords):
-        interval_init = 0 + line * (len(self.metre) + 1)
+        interval_init = 1 + line * (len(self.metre) + 1)
         interval_end = interval_init + len(self.metre)
 
         wordList = inWords.split(" ")
@@ -168,17 +172,17 @@ class FST:
             self.machine[curState].append((w[0], length))
 
 if __name__=='__main__':
-    vezn = ["-","-","-",".",".","-",".","-"]
+    vezn = ["-",".","-","-",".",".","-","-"]
     fst = FST(vezn, "./Code/revani-words")
     for s in fst.machine:
         pass
         #print(s)
     #fst.constrain(0, 'āşiyān eyler beni')
-    fst.constrain(1, 'zamān zamān')
+    fst.constrain(1, "ayaġında")
     print("\n*************\n")
     for s in fst.machine:
         pass
     str=""
     while not "izafe" in str:
-        str=fst.formatted()
+        str=fst.generate()
         print(str)

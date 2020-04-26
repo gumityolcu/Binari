@@ -1,5 +1,9 @@
 
+def createCharLevelDataset(fName):
+    pass
 
+def createSylLevelDataset(fName):
+    pass
 
 def standardise(fName):
     path = "./data/" + fName
@@ -45,6 +49,7 @@ def createOTAPDataFromIndividualTexts():
     for s in data:
         f.write("<beginCouplet> ")
         for l in s:
+            #l=l.replace(" ", " <space> ")
             f.write(l)
             f.write(" <endLine> ")
         f.write("<endCouplet>\n")
