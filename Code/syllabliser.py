@@ -10,7 +10,7 @@ Kelime içinde yan yana gelen üç ünsüz harften ilk ikisi kendinden önceki �
 üçüncüsü kendinden sonraki ünlüyle hece kurar: alt-lık, Türk-çe, kork-mak vb.
 
 """
-vowels = ["a", "ā", "â", "e", "ı", "i", "ī", "î", "o", "ö", "ô", "u", "ū", "û", "ü"]
+vowels = ["a", "ā", "ǎ", "â", "e", "ı", "i", "ī", "î", "o", "ö", "ô", "ō", "u", "ū", "û", "ü"]
 longVowels = ["ā", "â", "ī", "î", "ô", "ū", "û"]
 
 
@@ -36,27 +36,18 @@ def get_syllables(word):
     inSyllable = [-1] * len(word)
     vowelCount = 0
     vowelPoss = list()
-    syllables = list()
     # Count the number of vowels to find the number of syllables
     for c in range(0, len(word)):
         if isVowel(word[c]):
             vowelCount = vowelCount + 1
             inSyllable[c] = vowelCount
             vowelPoss.append(c)
-            # Add the vowels of the syllables
-            syllables.append(word[c])
 
     # First character belongs to the first syllable
     inSyllable[0] = 1
-    if not isVowel(word[0]):
-        # Add the character to the first syllable if not already added
-        syllables[0] = word[0] + syllables[0]
 
     # Last character belongs to the last syllable
     inSyllable[-1] = vowelCount
-    if not isVowel(word[-1]):
-        # Add the character to the last syllable if not already added
-        syllables[-1] = syllables[-1] + word[-1]
 
     # Assign syllables and edit them according to the logical rule
     for c in range(1, len(word) - 1):
@@ -66,11 +57,13 @@ def get_syllables(word):
                 inSyllable[c] = inSyllable[c-1]
             elif isVowel(word[c + 1]):
                 inSyllable[c] = inSyllable[c + 1]
-                syllables[inSyllable[c] - 1] = word[c] + syllables[inSyllable[c] - 1]
             else:
                 inSyllable[c] = inSyllable[c - 1]
-                syllables[inSyllable[c] - 1] = syllables[inSyllable[c] - 1] + word[c]
 
+    # Construct syllables from inSyllable array
+    syllables = [""]*vowelCount
+    for i in range(0,len(inSyllable)):
+        syllables[inSyllable[i]-1]=syllables[inSyllable[i]-1]+word[i]
     return syllables
 
 
@@ -110,7 +103,10 @@ def get_aruz(word):
     return aruz
 
 if __name__=="__main__":
-    print(get_aruz("<mahlas>den"))
-    print(get_aruz("n'ola"))
-    print(get_aruz("n'için"))
-    print(get_aruz("n'eyleyedurayım"))
+    print(get_syllables("bîrışk"))
+    print(get_syllables("abicim"))
+    print(get_syllables("nasıl"))
+    print(get_syllables("âbidelîk"))
+    print(get_syllables("dünyadüzmü"))
+    print(get_syllables("altıbuçulmilyon"))
+    print(get_syllables("yüzdeiki"))

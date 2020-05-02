@@ -5,7 +5,7 @@ import copy
 mefulumefailu = ["-", "-", ".", ".", "-", "-", ".", ".", "-", "-", ".", ".", "-", "-"]
 failatunfailatun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-"]
 failatun = ["-", ".", "-", "-"]
-
+feilatun = [".", ".", "-", "-"]
 
 def computeErr(arr1, arr2, EOL=False):
     err = 0

@@ -1,60 +1,3 @@
-
-def createCharLevelDataset(fName):
-    pass
-
-def createSylLevelDataset(fName):
-    pass
-
-def standardise(fName):
-    path = "./data/" + fName
-    f = open(path)
-    lines = f.readlines()
-    f.close()
-    for l in lines:
-        l2=l.lower()
-        l2=l2.replace("ā","â")
-        l2=l2.replace("ā","â")
-        l2=l2.replace("ā","â")
-        l2=l2.replace("ā","â")
-
-def createOTAPDataFromIndividualTexts():
-    names=["mihri","necati","revani-all"]
-    data=list()
-    extent=0
-    for i in names:
-        f=open("data/OTAP clean data/"+i)
-        linez=f.readlines()
-        f.close()
-        dataUnit=list()
-        for l in linez:
-            l = l.strip().lower()
-            cont=True
-            if extent == 0:
-                if l == "4":
-                    extent = 4
-                    cont=False
-                elif l == "5":
-                    extent = 5
-                    cont=False
-                else:
-                    extent = 2
-            if cont:
-                l = l[3:]
-                dataUnit.append(l)
-                extent = extent - 1
-                if extent==0:
-                    data.append(dataUnit)
-                    dataUnit=[]
-    f=open("data/OTAP clean data/total", "w")
-    for s in data:
-        f.write("<beginCouplet> ")
-        for l in s:
-            #l=l.replace(" ", " <space> ")
-            f.write(l)
-            f.write(" <endLine> ")
-        f.write("<endCouplet>\n")
-    f.close()
-
 def OTAPAnalyser(fName, writeToFile):
     path = "./data/" + fName
     f = open(path)
@@ -129,4 +72,21 @@ def safahatAnalyser(writeToFile=True):
         output.close()
     return vocab
 
-createOTAPDataFromIndividualTexts()
+def standardise(fName):
+    path = "./data/" + fName
+    f = open(path)
+    lines = f.readlines()
+    f.close()
+    for l in lines:
+        l2=l.lower()
+        l2=l2.replace("ā","â")
+        l2=l2.replace("ā","â")
+        l2=l2.replace("ā","â")
+        l2=l2.replace("ā","â")
+
+a="asd"
+
+b=["asd"]
+for c in a:
+    b.append(c)
+print(b)
