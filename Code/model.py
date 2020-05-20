@@ -40,17 +40,22 @@ def createCharLevelData(fName):
                     couplet.append(" ")
         charDataset.append(couplet)
     flatText = [charac for coupl in charDataset for charac in coupl]
-    print(flatText[0:1000])
-    vocab = sorted(set(flatText))
+    #for s in charDataset[0:203]:
+    #    print(s)
 
-    char2idx = {c:i for i,c in enumerate(vocab)}
+    vocab = ["<PAD>"] + sorted(set(flatText))
+    # print(len(vocab))
+    char2idx = {c: i for i, c in enumerate(vocab)}
     idx2char = np.array(vocab)
     idxDataset = list()
+    maxLength = np.amax(np.array([len(l) for l in charDataset]))
     for coup in charDataset:
-        idxDataset.append(np.array([char2idx[c] for c in coup ]))
-    #idxDatasetX, idxDatasetY=prepareForTraining(np.array(idxDataset))
-
-    return idxDataset, idx2char, char2idx
+        cplt = [char2idx[c] for c in coup]
+        pad_len = maxLength - len(cplt)
+        cplt = np.array(cplt)
+        cplt = np.pad(cplt, (0, pad_len), constant_values=(0, 0))
+        idxDataset.append(cplt)
+    return np.array(idxDataset), idx2char, char2idx
 
 
 
@@ -67,17 +72,16 @@ def createSylLevelData(fName):
                 couplet.append(spl[s])
             else:
                 syls=syl.get_syllables(spl[s])
-                #if 'ʿıḳş' in syls:
-                #    print(spl[s])
                 for sy in syls:
                     couplet.append(sy)
                 if spl[s + 1][0] != "<" or spl[s + 1][0:8] == "<mahlas>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
                     couplet.append(" ")
         sylDataset.append(couplet)
     flatText = [syllable for coupl in sylDataset for syllable in coupl]
-    for sss in sylDataset[0:203]:
-        print(sss)
+    #for sss in sylDataset[0:203]:
+    #    print(sss)
     vocab = ["<PAD>"]+sorted(set(flatText))
+    #print(len(vocab))
     char2idx = {c: i for i, c in enumerate(vocab)}
     idx2char = np.array(vocab)
     idxDataset = list()
@@ -91,7 +95,7 @@ def createSylLevelData(fName):
     return np.array(idxDataset), idx2char, char2idx
 
 
-def createOTAPDataFromIndividualTexts():
+def createOTAPDataFromIndividualTexts(latinCharSet=False):
     names=["mihri","necati","revani-all"]
     data=list()
     extent=0
@@ -124,6 +128,25 @@ def createOTAPDataFromIndividualTexts():
         f.write("<beginCouplet> ")
         for l in s:
             #l=l.replace(" ", " <space> ")
+            if latinCharSet:
+                l=l.replace("ā", "â")
+                l=l.replace("ī", "î")
+                l=l.replace("ō", "ô")
+                l=l.replace("ū", "û")
+                l=l.replace("ż", "z")
+                l=l.replace("ẓ", "z")
+                l=l.replace("ẕ", "z")
+                l=l.replace("s̲", "s")
+                l=l.replace("ṣ", "s")
+                l=l.replace("ḍ", "d")
+                l=l.replace("ḥ", "h")
+                l=l.replace("ẖ", "h")
+                l=l.replace("ḫ", "h")
+                l=l.replace("ḳ", "k")
+                l=l.replace("ṭ", "t")
+                l=l.replace("ṯ", "t")
+                l=l.replace("ñ", "n")
+
             f.write(l)
             f.write(" <endLine> ")
         f.write("<endCouplet>\n")
@@ -138,8 +161,9 @@ def buildGRUModelWithEmbedding(vocab_size, embedding_dim, rnn_units, batch_size)
     return model
 
 if __name__=="__main__":
-    #createOTAPDataFromIndividualTexts()
-    LEVEL="SYL"
+    createOTAPDataFromIndividualTexts(True)
+"""
+    LEVEL="CHAR"
     if LEVEL=="SYL":
         data,idx2char,char2idx=createSylLevelData("data/OTAP clean data/total")
     elif LEVEL=="CHAR":
@@ -147,7 +171,7 @@ if __name__=="__main__":
     else:
         print("Invalid LEVEL parameter")
         exit()
-    """inputs=tf.data.Dataset.from_tensor_slices(data)
+    inputs=tf.data.Dataset.from_tensor_slices(data)
     dataset=inputs.map(prepareForTraining)
     cum=0
     for r in data:
@@ -155,9 +179,9 @@ if __name__=="__main__":
     print(np.array(list(dataset.as_numpy_iterator())).shape)
 
 
-    #for input_example, target_example in dataset.take(1):
-    #    print('Input data: ', repr(''.join(idx2char[input_example.numpy()])))
-    #    print('Target data:', repr(''.join(idx2char[target_example.numpy()])))
+    for input_example, target_example in dataset.take(1):
+        print('Input data: ', repr(''.join(idx2char[input_example.numpy()])))
+        print('Target data:', repr(''.join(idx2char[target_example.numpy()])))
     #for i, (input_idx, target_idx) in enumerate(zip(input_example[:5], target_example[:5])):
     #    print("Step {:4d}".format(i))
     #    print("  input: {} ({:s})".format(input_idx, repr(idx2char[input_idx])))
@@ -205,5 +229,6 @@ if __name__=="__main__":
         save_weights_only=True, monitor="loss", save_best_only=True, mode="min")
 
     EPOCHS = 50
-    print(len(idx2char))
+    for i in char2idx.keys():
+        print(i)
     #hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])"""
