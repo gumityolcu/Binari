@@ -21,12 +21,13 @@ def get_chars(str):
         c += 1
     return chrs
 
-def createCharLevelData(fName):
+def createCharLevelData(fName, pad=False):
     f=open(fName)
     lines=f.readlines()
     f.close()
     charDataset=list()
     for l in lines:
+        l = l.replace("s̲", "S")
         couplet=list()
         spl=l.split()
         for s in range(0, len(spl)):
@@ -42,8 +43,10 @@ def createCharLevelData(fName):
     flatText = [charac for coupl in charDataset for charac in coupl]
     #for s in charDataset[0:203]:
     #    print(s)
-
-    vocab = ["<PAD>"] + sorted(set(flatText))
+    if pad:
+        vocab = ["<PAD>"] + sorted(set(flatText))
+    else:
+        vocab=sorted(set(flatText))
     # print(len(vocab))
     char2idx = {c: i for i, c in enumerate(vocab)}
     idx2char = np.array(vocab)
@@ -53,7 +56,8 @@ def createCharLevelData(fName):
         cplt = [char2idx[c] for c in coup]
         pad_len = maxLength - len(cplt)
         cplt = np.array(cplt)
-        cplt = np.pad(cplt, (0, pad_len), constant_values=(0, 0))
+        if pad:
+            cplt = np.pad(cplt, (0, pad_len), constant_values=(0, 0))
         idxDataset.append(cplt)
     return np.array(idxDataset), idx2char, char2idx
 
@@ -146,31 +150,31 @@ def createOTAPDataFromIndividualTexts(latinCharSet=False):
                 l=l.replace("ṭ", "t")
                 l=l.replace("ṯ", "t")
                 l=l.replace("ñ", "n")
-
             f.write(l)
             f.write(" <endLine> ")
         f.write("<endCouplet>\n")
     f.close()
 
-def buildGRUModelWithEmbedding(vocab_size, embedding_dim, rnn_units, batch_size):
+def buildGRUModelWithEmbedding(vocab_size, embedding_dim, rnn_units, batch_size, masking=True, statefulness=False):
     model = tf.keras.Sequential([
-    tf.keras.layers.Embedding(vocab_size, embedding_dim,mask_zero=True, batch_input_shape=[batch_size, None]),
-        tf.keras.layers.GRU(rnn_units,return_sequences=True, stateful=False, recurrent_initializer='glorot_uniform'),
+    tf.keras.layers.Embedding(vocab_size, embedding_dim,mask_zero=masking, batch_input_shape=[batch_size, None]),
+        tf.keras.layers.GRU(rnn_units,return_sequences=True, stateful=statefulness, recurrent_initializer='glorot_uniform'),
         tf.keras.layers.Dense(vocab_size)
         ])
     return model
 
 if __name__=="__main__":
-    createOTAPDataFromIndividualTexts(True)
-"""
+    createOTAPDataFromIndividualTexts(False)
+
     LEVEL="CHAR"
     if LEVEL=="SYL":
         data,idx2char,char2idx=createSylLevelData("data/OTAP clean data/total")
     elif LEVEL=="CHAR":
-        data,idx2char,char2idx=createCharLevelData("data/OTAP clean data/total")
+        data,idx2char,char2idx=createCharLevelData("data/OTAP clean data/total",pad=True)
     else:
         print("Invalid LEVEL parameter")
         exit()
+
     inputs=tf.data.Dataset.from_tensor_slices(data)
     dataset=inputs.map(prepareForTraining)
     cum=0
