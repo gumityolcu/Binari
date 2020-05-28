@@ -19,6 +19,24 @@ def computeErr(arr1, arr2, EOL=False):
                     return MAX
     return err
 
+def makeWordList(inp,outp):
+    f=open(inp,"r")
+    lines=f.readlines()
+    f.close()
+    words=list()
+    for l in lines:
+        spl=l.split()
+        for w in spl:
+            words.append(w)
+    f=open(outp,"w")
+    words=sorted(list(set(words)))
+    for i,w in enumerate(words):
+        if w!="<beginCouplet>" and w!="<endCouplet>" and w!="<endLine>":
+            f.write(w)
+            if i!=len(words)-1:
+                f.write("\n")
+    f.close()
+
 
 class FST:
 
@@ -172,13 +190,12 @@ class FST:
             self.machine[curState].append((w[0], length))
 
 if __name__=='__main__':
-    vezn = ["-",".","-","-",".",".","-","-"]
-    fst = FST(vezn, "./Code/revani-words")
-    for s in fst.machine:
-        pass
-        #print(s)
-    #fst.constrain(0, 'āşiyān eyler beni')
-    fst.constrain(1, "ayaġında")
+    outp="./data/OTAP clean data/wordList.txt"
+    makeWordList("./data/OTAP clean data/total-transcription",outp)
+    vezn = failatunfailatun#["-",".","-","-",".",".","-","-",".",".","-","-"]
+    fst = FST(vezn, outp)
+    fst.constrain(0, 'āşiyān eyler beni')
+    fst.constrain(1, "revān eyler beni")
     print("\n*************\n")
     for s in fst.machine:
         pass

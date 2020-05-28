@@ -86,7 +86,7 @@ def get_aruz(word):
     aruz = list()
     for i in sylls:
         if i == "<mahlas>":
-            aruz+=[".","-","-"]
+            aruz+=[".","-","-"] # . - - for Binârî
         elif i=="<izafe>":
             aruz.append(".") # This is a placeholder, the <izafe> tokens is not compared against the actual metre in the FST implementation
         elif isVowel(i[-1]):
