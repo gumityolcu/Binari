@@ -6,6 +6,7 @@ mefulumefailu = ["-", "-", ".", ".", "-", "-", ".", ".", "-", "-", ".", ".", "-"
 failatunfailatun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-"]
 failatun = ["-", ".", "-", "-"]
 feilatun = [".", ".", "-", "-"]
+mefailun = [".","-","-","-"]
 
 def computeErr(arr1, arr2, EOL=False):
     err = 0
@@ -44,6 +45,12 @@ class FST:
         # Load from already existing file
         pass
 
+    def __str__(self):
+        ret=""
+        for i in range(0, self.states):
+            ret+=str(i) + " " + str(self.machine[i])+"\n"
+        return ret
+
     def __init__(self, metre, wordsPath, errTh=0):
         self.errThreshold = errTh
         self.metre = metre
@@ -78,8 +85,8 @@ class FST:
             # For each state of the root machine
             for s in range(0, len(self.rootMachine) - 1):
                 if word=="<izafe>":
-                    if s < len(self.rootMachine) - 2:
-                    # add <izafe> as usable for all syllables except the last syllable of a line
+                    if (s < len(self.rootMachine) - 2) and (s>0):
+                    # add <izafe> as usable for all syllables except the last syllable of a line or the first syllable of a line
                         self.rootMachine[s].append((i,1))
                 # If you can use the word at state s without crossing the ending of the metre
                 elif not s + len(met) > len(self.metre):
@@ -119,7 +126,7 @@ class FST:
         state = initial_state
         strr = ""
         while state < self.states:
-            r = random.randint(0, len(fst.machine[state]) - 1)
+            r = random.randint(0, len(self.machine[state]) - 1)
             word, step = self.machine[state][r]
             strr += self.vocabulary[word][0] + " "
             state = state + step
@@ -192,14 +199,11 @@ class FST:
 if __name__=='__main__':
     outp="./data/OTAP clean data/wordList.txt"
     makeWordList("./data/OTAP clean data/total-transcription",outp)
-    vezn = failatunfailatun#["-",".","-","-",".",".","-","-",".",".","-","-"]
+    vezn = failatun
     fst = FST(vezn, outp)
-    fst.constrain(0, 'āşiyān eyler beni')
-    fst.constrain(1, "revān eyler beni")
+
+
+    #fst.constrain(0, 'āşiyān eyler beni')
+    #fst.constrain(1, "revān eyler beni")
     print("\n*************\n")
-    for s in fst.machine:
-        pass
-    str=""
-    while not "izafe" in str:
-        str=fst.generate()
-        print(str)
+    print(fst)

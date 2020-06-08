@@ -164,7 +164,7 @@ def buildGRUModelWithEmbedding(vocab_size, embedding_dim, rnn_units, batch_size,
     model = tf.keras.Sequential([
         tf.keras.layers.Embedding(vocab_size, embedding_dim, mask_zero=masking, batch_input_shape=[batch_size, None]),
         tf.keras.layers.GRU(rnn_units, return_sequences=True, stateful=statefulness,
-                            recurrent_initializer='glorot_uniform'),
+                            recurrent_initializer='Zeros'),
         tf.keras.layers.Dense(vocab_size)
     ])
     return model
@@ -201,10 +201,9 @@ if __name__ == "__main__":
 
     BUFFER_SIZE = 10000
 
-    dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=False)
+    dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
 
-    model = buildGRUModelWithEmbedding(vocab_size=len(idx2char), embedding_dim=128, rnn_units=256,
-                                       batch_size=BATCH_SIZE)
+    model = buildGRUModelWithEmbedding(vocab_size=len(idx2char), embedding_dim=128, rnn_units=256, batch_size=BATCH_SIZE)
     model.summary()
     for input_example_batch, target_example_batch in dataset.take(1):
         print(input_example_batch.shape)
@@ -241,4 +240,4 @@ if __name__ == "__main__":
     EPOCHS = 50
     for i in char2idx.keys():
         print(i)
-    # hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])"""
+    # hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
