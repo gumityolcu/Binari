@@ -4,6 +4,7 @@ import syllabliser as syl
 import model
 import numpy as np
 import sys
+import time
 
 sys.setrecursionlimit(20000)
 
@@ -42,7 +43,7 @@ def makeIdxfromChar(str, char2idx, level):
 
 # Beam state is (generated-text, fst-state, hidden-state, score)
 def expandBeam(beam, fst, mdl, char2idx, level):
-    print("Expanding: "+beam[0])
+    #print("Expanding: "+beam[0])
     generated_text = beam[0]
     fst_state = beam[1]
     hidden_state = beam[2]
@@ -52,7 +53,14 @@ def expandBeam(beam, fst, mdl, char2idx, level):
         # If already printed the last token
         if generated_text[-8:] == "Couplet>":
             return [beam]
-    for s in fst.machine[fst_state]:  # For each next state
+    lastLength=0
+    for i,s in enumerate(fst.machine[fst_state]): # For each next state
+        if len(fst.machine[fst_state])!=1:
+            #print(" "*lastLength,end='\r')
+            printMsg="Expanding state "+str(i)+" of "+str(len(fst.machine[fst_state]))
+            print(printMsg, end='\r')
+            time.sleep(0.005)
+            lastLength=len(printMsg)
         word, step = s
         textWord = fst.vocabulary[word][0]
         # update generated-text
@@ -84,6 +92,7 @@ def expandBeam(beam, fst, mdl, char2idx, level):
                 newText += " "
             newBeam = (newText, newState, newH, score + newScore)
             retBeams.append(newBeam)
+
     return retBeams
 
 
@@ -126,9 +135,24 @@ def generate_text(model, char2idx, start_string):
         text_generated.append(idx2char[predicted_id])
     return text_generated
 
+def beamArrayToStr(bArray):
+    ret="\n"
+    for b in bArray:
+        ret+=b[0]+"\n"
+    return ret
+
+
+def selectBeams(beams, size):
+    if len(beams)<size:
+        return beams
+    else:
+        ret = sorted(beams, key=lambda b: b[3],reverse=True)[0:size]
+        return ret
+
 
 if __name__ == "__main__":
     LEVEL = "CHAR"
+    BEAMSIZE = 10
     if LEVEL == "SYL":
         _, idx2char, char2idx = model.createSylLevelData("data/OTAP clean data/total-transcription")
     elif LEVEL == "CHAR":
@@ -152,6 +176,7 @@ if __name__ == "__main__":
     langModel.layers[1].reset_states(states=s_0)
 
     outp = "./data/OTAP clean data/wordList.txt"
+    #outp = "./data/tempWordList.txt"
     # FST.makeWordList("./data/OTAP clean data/total-transcription", outp)
     vezn = FST.mefailun
     fst = FST.FST(vezn, outp)
@@ -165,13 +190,15 @@ if __name__ == "__main__":
     while (cont):
         cont = False
         newBeams = []
+        print(str(len(beams))+" beams")
         for b in beams:
+            print("Expanding: '"+b[0]+"'")
             if b[1] < fst.states - 1:
                 cont = True
-            newBeams += expandBeam(b, fst, langModel, char2idx, LEVEL)
-        print(len(newBeams))
-        print(fst.machine[newBeams[0][1]])
-        print(newBeams[0][0])
-        beams = newBeams[0:30]
+            freshBeams = expandBeam(b, fst, langModel, char2idx, LEVEL)
+            print("\n", end="")
+            print("Received "+str(len(freshBeams))+" beams:"+beamArrayToStr(freshBeams))
+            newBeams+=freshBeams
+        beams = selectBeams(newBeams, BEAMSIZE)
     for i in range(len(beams)):
-        print(str(i) + " - " + beams[i][0] + ",\t" + str(beams[i][1]))
+        print(str(i) + " - " + beams[i][0] + ",\t" + str(beams[i][1])+"\t"+str(beams[i][3]))
