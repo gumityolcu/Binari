@@ -33,6 +33,8 @@ def makeWordList(inp,outp):
     words=sorted(list(set(words)))
     for i,w in enumerate(words):
         if w!="<beginCouplet>" and w!="<endCouplet>" and w!="<endLine>":
+            w = w.lower()
+            w = w.replace("s̲", "S")
             f.write(w)
             if i!=len(words)-1:
                 f.write("\n")
@@ -199,11 +201,11 @@ class FST:
 if __name__=='__main__':
     outp="./data/OTAP clean data/wordList.txt"
     makeWordList("./data/OTAP clean data/total-transcription",outp)
-    vezn = failatun
-    fst = FST(vezn, outp)
+    #vezn = failatun
+    #fst = FST(vezn, outp)
 
 
     #fst.constrain(0, 'āşiyān eyler beni')
     #fst.constrain(1, "revān eyler beni")
-    print("\n*************\n")
-    print(fst)
+    #print("\n*************\n")
+    #print(fst)

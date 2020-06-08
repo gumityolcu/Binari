@@ -8,22 +8,6 @@ def prepareForTraining(x):
     return x[:-1], x[1:]
 
 
-def get_chars(str):
-    chrs = list()
-    c = 0
-    while c < len(str):
-        if str[c] == "<":
-            c2 = c
-            while str[c2] != ">":
-                c2 += 1
-            chrs.append(str[c:c2 + 1])
-            c = c2
-        else:
-            chrs.append(str[c])
-        c += 1
-    return chrs
-
-
 def createCharLevelData(fName, pad=False):
     f = open(fName)
     lines = f.readlines()
@@ -37,11 +21,11 @@ def createCharLevelData(fName, pad=False):
             if spl[s] == "<beginCouplet>" or spl[s] == "<endLine>" or spl[s] == "<endCouplet>":
                 couplet.append(spl[s])
             else:
-                chars = get_chars(spl[s])
+                chars = syl.get_chars(spl[s])
                 for c in chars:
                     couplet.append(c)
                 if spl[s + 1][0] != "<" or spl[s + 1][
-                                           0:8] == "<mahlas>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
+                                           0:8] == "<mahlas>" or spl[s+1]=="<izafe>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
                     couplet.append(" ")
         charDataset.append(couplet)
     flatText = [charac for coupl in charDataset for charac in coupl]
@@ -82,7 +66,7 @@ def createSylLevelData(fName):
                 for sy in syls:
                     couplet.append(sy)
                 if spl[s + 1][0] != "<" or spl[s + 1][
-                                           0:8] == "<mahlas>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
+                                           0:8] == "<mahlas>" or spl[s+1]=="<izafe>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
                     couplet.append(" ")
         sylDataset.append(couplet)
     flatText = [syllable for coupl in sylDataset for syllable in coupl]
@@ -173,7 +157,7 @@ def buildGRUModelWithEmbedding(vocab_size, embedding_dim, rnn_units, batch_size,
 if __name__ == "__main__":
     createOTAPDataFromIndividualTexts(False)
 
-    LEVEL = "CHAR"
+    """LEVEL = "SYL"
     if LEVEL == "SYL":
         data, idx2char, char2idx = createSylLevelData("data/OTAP clean data/total")
     elif LEVEL == "CHAR":
@@ -240,4 +224,4 @@ if __name__ == "__main__":
     EPOCHS = 50
     for i in char2idx.keys():
         print(i)
-    # hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
+    # hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])"""

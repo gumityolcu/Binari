@@ -15,5 +15,8 @@ change dāˀǐm to dāˀim in mihri
 
 remove � from revani_musammat
 
+use S instead of s̲  in char level model by replacing it in-code because we lowercase everything first
+This is done in FST.makeWordList and model.createCharData
+
 
 

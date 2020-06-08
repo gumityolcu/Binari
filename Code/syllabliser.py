@@ -78,6 +78,21 @@ def elongateMetre(met):
     return longMetre
 
 
+def get_chars(str):
+    chrs = list()
+    c = 0
+    while c < len(str):
+        if str[c] == "<":
+            c2 = c
+            while str[c2] != ">":
+                c2 += 1
+            chrs.append(str[c:c2 + 1])
+            c = c2
+        else:
+            chrs.append(str[c])
+        c += 1
+    return chrs
+
 def get_aruz(word):
     word = word.replace('·', '')
     word = word.replace('-', '')

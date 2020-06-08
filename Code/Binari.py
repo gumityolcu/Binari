@@ -1,5 +1,6 @@
 import tensorflow as tf
 import FST
+import syllabliser as syl
 import model
 import numpy as np
 import sys
@@ -30,15 +31,18 @@ def getScore(mdl, h,
     return mdl.layers[1].states[0].numpy(), score
 
 
-def makeIdxfromChar(str, char2idx):
-    ret = []
-    for c in str:
-        ret.append(char2idx[c])
-    return np.array(ret)
+def makeIdxfromChar(str, char2idx, level):
+    tokens = []
+    if level=="CHAR":
+        tokens=syl.get_chars(str)
+    elif level=="SYL":
+        tokens=syl.get_syllables(str)
+    return [char2idx[t] for t in tokens]
 
 
 # Beam state is (generated-text, fst-state, hidden-state, score)
-def expandBeam(beam, fst, mdl, char2idx):
+def expandBeam(beam, fst, mdl, char2idx, level):
+    print("Expanding: "+beam[0])
     generated_text = beam[0]
     fst_state = beam[1]
     hidden_state = beam[2]
@@ -58,8 +62,8 @@ def expandBeam(beam, fst, mdl, char2idx):
 
         # update hidden-state and score
         # mdl.layers[1].reset_states(states=hidden_state)
-        # FIXXXX
-        newH, newScore = getScore(mdl, hidden_state, [word])
+        indexes = makeIdxfromChar(fst.vocabulary[word][0], char2idx, level)
+        newH, newScore = getScore(mdl, hidden_state, indexes)
 
         # Continue adding tokens recursively to the beam if there is only one choice for the next state
         # Return this further expanded beam or beam with possible next expantions
@@ -72,7 +76,7 @@ def expandBeam(beam, fst, mdl, char2idx):
                 newScore += newnewScore
                 newText += " "
             newBeam = (newText, newState, newH, score + newScore)
-            retBeams += expandBeam(newBeam, fst, mdl, char2idx)
+            retBeams += expandBeam(newBeam, fst, mdl, char2idx, level)
         else:
             if textWord[-1] != '>' or textWord == "<izafe>" or textWord == "<mahlas>":
                 # Add space if this word is not a <> invisible token
@@ -147,12 +151,14 @@ if __name__ == "__main__":
     s_0 = np.zeros(shape=stateShape)
     langModel.layers[1].reset_states(states=s_0)
 
-    outp = "./data/tempWordList.txt"
+    outp = "./data/OTAP clean data/wordList.txt"
     # FST.makeWordList("./data/OTAP clean data/total-transcription", outp)
     vezn = FST.mefailun
     fst = FST.FST(vezn, outp)
+
+    # EMPLOY BEAM SEARCH
     beam = ("", 0, langModel.layers[1].states[0].numpy(), 0.0)
-    print(str(fst))
+    #print(str(fst))
     beams = []
     beams.append(beam)
     cont = True
@@ -162,7 +168,10 @@ if __name__ == "__main__":
         for b in beams:
             if b[1] < fst.states - 1:
                 cont = True
-            newBeams += expandBeam(b, fst, langModel, char2idx)
-        beams = newBeams
+            newBeams += expandBeam(b, fst, langModel, char2idx, LEVEL)
+        print(len(newBeams))
+        print(fst.machine[newBeams[0][1]])
+        print(newBeams[0][0])
+        beams = newBeams[0:30]
     for i in range(len(beams)):
         print(str(i) + " - " + beams[i][0] + ",\t" + str(beams[i][1]))
