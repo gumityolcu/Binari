@@ -58,8 +58,7 @@ def expandBeam(beam, fst, mdl, char2idx, level):
         if len(fst.machine[fst_state])!=1:
             #print(" "*lastLength,end='\r')
             printMsg="Expanding state "+str(i)+" of "+str(len(fst.machine[fst_state]))
-            print(printMsg, end='\r')
-            time.sleep(0.005)
+            print(printMsg)
             lastLength=len(printMsg)
         word, step = s
         textWord = fst.vocabulary[word][0]
@@ -152,7 +151,7 @@ def selectBeams(beams, size):
 
 if __name__ == "__main__":
     LEVEL = "CHAR"
-    BEAMSIZE = 10
+    BEAMSIZE = 5
     if LEVEL == "SYL":
         _, idx2char, char2idx = model.createSylLevelData("data/OTAP clean data/total-transcription")
     elif LEVEL == "CHAR":
