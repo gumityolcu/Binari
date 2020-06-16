@@ -56,10 +56,9 @@ def expandBeam(beam, fst, mdl, char2idx, level):
     lastLength=0
     for i,s in enumerate(fst.machine[fst_state]): # For each next state
         if len(fst.machine[fst_state])!=1:
-            #print(" "*lastLength,end='\r')
-            printMsg="Expanding state "+str(i)+" of "+str(len(fst.machine[fst_state]))
-            print(printMsg)
-            lastLength=len(printMsg)
+            if i%100==0:
+                printMsg="Expanding: "+str(i*100/len(fst.machine[fst_state]))
+                print(printMsg)
         word, step = s
         textWord = fst.vocabulary[word][0]
         # update generated-text
@@ -174,12 +173,17 @@ if __name__ == "__main__":
     s_0 = np.zeros(shape=stateShape)
     langModel.layers[1].reset_states(states=s_0)
 
-    outp = "./data/OTAP clean data/wordList.txt"
-    #outp = "./data/tempWordList.txt"
+    #outp = "./data/OTAP clean data/wordList.txt"
+    outp = "./data/tempWordList.txt"
     # FST.makeWordList("./data/OTAP clean data/total-transcription", outp)
-    vezn = FST.mefailun
+    #vezn = FST.mefailunmefailun
+    vezn=FST.failatun
     fst = FST.FST(vezn, outp)
-
+    #fst.constrain(0, 'ki bil dil bil')
+    #fst.constrain(1,'bil bil')
+    print(str(fst))
+    print("\n**********************\n")
+    fst.reverse()
     # EMPLOY BEAM SEARCH
     beam = ("", 0, langModel.layers[1].states[0].numpy(), 0.0)
     #print(str(fst))

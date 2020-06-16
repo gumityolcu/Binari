@@ -7,6 +7,7 @@ failatunfailatun = ["-", ".", "-", "-", "-", ".", "-", "-", "-", ".", "-", "-", 
 failatun = ["-", ".", "-", "-"]
 feilatun = [".", ".", "-", "-"]
 mefailun = [".","-","-","-"]
+mefailunmefailun=[".","-","-","-",".","-","-","-",".","-","-","-",".","-","-","-"]
 
 def computeErr(arr1, arr2, EOL=False):
     err = 0
@@ -68,15 +69,15 @@ class FST:
             x = x.strip()
             self.vocabulary.append((x, syllabliser.get_aruz(x)))
         self.vocabulary.append(("<beginCouplet>",[]))
-        beginCouplet = len(self.vocabulary) - 1
+        self.beginCouplet = len(self.vocabulary) - 1
         self.vocabulary.append(("<endLine>", []))
-        endLine = len(self.vocabulary) - 1
+        self.endLine = len(self.vocabulary) - 1
         self.vocabulary.append(("<endCouplet>", []))
-        endCouplet = len(self.vocabulary) - 1
+        self.endCouplet = len(self.vocabulary) - 1
 
         self.lineLength = len(metre)
         self.rootMachine = [[] for i in range(self.lineLength + 1)]
-        self.rootMachine[self.lineLength].append((endLine, 1))
+        self.rootMachine[self.lineLength].append((self.endLine, 1))
 
         # For each word in the vocabulary
         for i in range(0, len(self.vocabulary) - 3):  # Do not iterate over the <beginCouplet>, <endCouplet> and <endLine> tokens
@@ -101,9 +102,9 @@ class FST:
         # Copy and concatenate a copy of the machine to the end
         self.rootMachine += copy.deepcopy(self.rootMachine)
         # Finish the machine for a couplet
-        self.rootMachine.append([(endCouplet, 0)])
+        self.rootMachine.append([(self.endCouplet, 0)])
         # Add the beginning state of the machine
-        self.rootMachine.insert(0, [(beginCouplet,1)])
+        self.rootMachine.insert(0, [(self.beginCouplet,1)])
         # Update internal variables for number of states and the machine
         self.reset()
 
@@ -115,12 +116,30 @@ class FST:
         self.machine = copy.deepcopy(self.rootMachine)
         self.states = len(self.machine)
 
+    def findEdgesEndingIn(self,state):
+        ret=[]
+        for i,s in enumerate(self.machine):
+            for e in s:
+                if i+e[1]==state:
+                    ret.append(e)
+        return ret
+
+
     def reverse(self):
-        stateCount=len(self.machine)
+        tempMachine=copy.deepcopy(self.machine)
+        stateCount=len(tempMachine)
+        tempMachine[-1]=[]
+        tempMachine[0]=[]
         newMachine=[[] for i in range(0, stateCount)]
-        for s in range(0, stateCount):
-            for a in self.machine[s]:
-                newMachine[stateCount-1-s].append((a[1],a[0]))
+        newMachine[0]=[(self.machine[-1][0][0],1)]
+        newMachine[-1]=[(self.machine[0][0][0],0)]
+        for s in range(1, stateCount-1):
+            edges=self.findEdgesEndingIn(stateCount-s)
+            newState=[]
+            for e in edges:
+                if e[0]!=self.endCouplet and e[0]!=self.beginCouplet:
+                    newState.append(e)
+            newMachine[s]=newState
         self.machine=newMachine
         return self.machine
 
@@ -199,8 +218,30 @@ class FST:
             self.machine[curState].append((w[0], length))
 
 if __name__=='__main__':
-    outp="./data/OTAP clean data/wordList.txt"
-    makeWordList("./data/OTAP clean data/total-transcription",outp)
+    outp = "./data/tempWordList.txt"
+    # FST.makeWordList("./data/OTAP clean data/total-transcription", outp)
+    # vezn = FST.mefailunmefailun
+    vezn = failatun
+    fst = FST(vezn, outp)
+    # fst.constrain(0, 'ki bil dil bil')
+    # fst.constrain(1,'bil bil')
+    print(str(fst))
+    print("\n**********************\n")
+    fst.reverse()
+    fst.reverse()
+    print(str(fst))
+
+
+
+
+
+
+
+
+
+
+    #outp="./data/OTAP clean data/wordList.txt"
+    #makeWordList("./data/OTAP clean data/total-transcription",outp)
     #vezn = failatun
     #fst = FST(vezn, outp)
 
