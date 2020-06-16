@@ -42,7 +42,7 @@ def makeIdxfromChar(str, char2idx, level):
 
 
 # Beam state is (generated-text, fst-state, hidden-state, score)
-def expandBeam(beam, fst, mdl, char2idx, level):
+def expandBeam(beam, fst, mdl, char2idx, level, generateReversed=True):
     #print("Expanding: "+beam[0])
     generated_text = beam[0]
     fst_state = beam[1]
@@ -51,7 +51,7 @@ def expandBeam(beam, fst, mdl, char2idx, level):
     retBeams = []
     if fst_state == fst.states - 1:
         # If already printed the last token
-        if generated_text[-8:] == "Couplet>":
+        if generated_text[-1][-8:] == "Couplet>":
             return [beam]
     lastLength=0
     for i,s in enumerate(fst.machine[fst_state]): # For each next state
@@ -62,13 +62,15 @@ def expandBeam(beam, fst, mdl, char2idx, level):
         word, step = s
         textWord = fst.vocabulary[word][0]
         # update generated-text
-        newText = generated_text + textWord
+        newText = generated_text + [textWord]
         # update fst-state
         newState = fst_state + step
 
         # update hidden-state and score
         # mdl.layers[1].reset_states(states=hidden_state)
         indexes = makeIdxfromChar(fst.vocabulary[word][0], char2idx, level)
+        if generateReversed:
+            indexes.reverse()
         newH, newScore = getScore(mdl, hidden_state, indexes)
 
         # Continue adding tokens recursively to the beam if there is only one choice for the next state
@@ -77,20 +79,20 @@ def expandBeam(beam, fst, mdl, char2idx, level):
             nextWord, _ = fst.machine[newState][0]
             if fst.vocabulary[nextWord][0][-1] != ">" or fst.vocabulary[nextWord][0] == "<izafe>" or \
                     fst.vocabulary[nextWord][0] == "<mahlas>":
-                # Add space if next token is not a <> invisible token
-                newH, newnewScore = getScore(mdl, newH, [char2idx[" "]])
-                newScore += newnewScore
-                newText += " "
+                if textWord!="<endLine>" and textWord!="<beginCouplet>":
+                    # Add space if next token is not a <> invisible token
+                    newH, newnewScore = getScore(mdl, newH, [char2idx[" "]])
+                    newScore += newnewScore
+                    newText+=[" "]
             newBeam = (newText, newState, newH, score + newScore)
             retBeams += expandBeam(newBeam, fst, mdl, char2idx, level)
         else:
             if textWord[-1] != '>' or textWord == "<izafe>" or textWord == "<mahlas>":
                 # Add space if this word is not a <> invisible token
                 newH, newScore = getScore(mdl, newH, [char2idx[" "]])
-                newText += " "
+                newText += [" "]
             newBeam = (newText, newState, newH, score + newScore)
             retBeams.append(newBeam)
-
     return retBeams
 
 
@@ -133,11 +135,19 @@ def generate_text(model, char2idx, start_string):
         text_generated.append(idx2char[predicted_id])
     return text_generated
 
+def getStringFromArray(arr):
+    ret=""
+    for w in arr:
+        ret+=w
+    return ret
+
+
 def beamArrayToStr(bArray):
     ret="\n"
     for b in bArray:
-        ret+=b[0]+"\n"
+        ret+=getStringFromArray(b[0])+"\n"
     return ret
+
 
 
 def selectBeams(beams, size):
@@ -148,9 +158,34 @@ def selectBeams(beams, size):
         return ret
 
 
+def generateCouplet(fst, langModel, BEAMSIZE=5, generateReversed=True):
+    stateShape = langModel.layers[1].states[0].numpy().shape
+    s_0 = np.zeros(shape=stateShape)
+    langModel.layers[1].reset_states(states=s_0)
+    # EMPLOY BEAM SEARCH
+    beam = ([], 0, langModel.layers[1].states[0].numpy(), 0.0)
+    # print(str(fst))
+    beams = []
+    beams.append(beam)
+    cont = True
+    while (cont):
+        cont = False
+        newBeams = []
+        print(str(len(beams)) + " beams")
+        for b in beams:
+            print("Expanding: '" + getStringFromArray(b[0]) + "'")
+            if b[1] < fst.states - 1:
+                cont = True
+            freshBeams = expandBeam(b, fst, langModel, char2idx, LEVEL,generateReversed=generateReversed)
+            print("\n", end="")
+            print("Received " + str(len(freshBeams)) + " beams:" + beamArrayToStr(freshBeams))
+            newBeams += freshBeams
+        beams = selectBeams(newBeams, BEAMSIZE)
+    return beams
+
+
 if __name__ == "__main__":
     LEVEL = "CHAR"
-    BEAMSIZE = 5
     if LEVEL == "SYL":
         _, idx2char, char2idx = model.createSylLevelData("data/OTAP clean data/total-transcription")
     elif LEVEL == "CHAR":
@@ -169,9 +204,7 @@ if __name__ == "__main__":
     langModel.build(tf.TensorShape([1, None]))
     langModel.summary()
 
-    stateShape = langModel.layers[1].states[0].numpy().shape
-    s_0 = np.zeros(shape=stateShape)
-    langModel.layers[1].reset_states(states=s_0)
+
 
     #outp = "./data/OTAP clean data/wordList.txt"
     outp = "./data/tempWordList.txt"
@@ -179,29 +212,8 @@ if __name__ == "__main__":
     #vezn = FST.mefailunmefailun
     vezn=FST.failatun
     fst = FST.FST(vezn, outp)
-    #fst.constrain(0, 'ki bil dil bil')
-    #fst.constrain(1,'bil bil')
-    print(str(fst))
-    print("\n**********************\n")
+    #fst.constrain(0,"karar dil")
     fst.reverse()
-    # EMPLOY BEAM SEARCH
-    beam = ("", 0, langModel.layers[1].states[0].numpy(), 0.0)
-    #print(str(fst))
-    beams = []
-    beams.append(beam)
-    cont = True
-    while (cont):
-        cont = False
-        newBeams = []
-        print(str(len(beams))+" beams")
-        for b in beams:
-            print("Expanding: '"+b[0]+"'")
-            if b[1] < fst.states - 1:
-                cont = True
-            freshBeams = expandBeam(b, fst, langModel, char2idx, LEVEL)
-            print("\n", end="")
-            print("Received "+str(len(freshBeams))+" beams:"+beamArrayToStr(freshBeams))
-            newBeams+=freshBeams
-        beams = selectBeams(newBeams, BEAMSIZE)
-    for i in range(len(beams)):
-        print(str(i) + " - " + beams[i][0] + ",\t" + str(beams[i][1])+"\t"+str(beams[i][3]))
+    beyts=generateCouplet(fst,langModel,generateReversed=True)
+    for b,_,_,_ in beyts:
+        print(b)
