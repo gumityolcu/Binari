@@ -30,8 +30,8 @@ def get_syllables(word):
         if word[8:]!='':
             ret+=get_syllables(word[8:])
         return ret
-    if word=="<izafe>":
-        return ["<izafe>"]
+    if word=="<izafe>" or word=="<beginCouplet>" or word=="<endLine>" or word=="<endCouplet>":
+        return [word]
     # We will assign each character to a syllable in the array inSyllable
     inSyllable = [-1] * len(word)
     vowelCount = 0

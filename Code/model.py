@@ -8,7 +8,7 @@ def prepareForTraining(x):
     return x[:-1], x[1:]
 
 
-def createCharLevelData(fName, pad=False):
+def createCharLevelData(fName, pad=False, BACKWARD=True):
     f = open(fName)
     lines = f.readlines()
     f.close()
@@ -25,7 +25,8 @@ def createCharLevelData(fName, pad=False):
                 for c in chars:
                     couplet.append(c)
                 if spl[s + 1][0] != "<" or spl[s + 1][
-                                           0:8] == "<mahlas>" or spl[s+1]=="<izafe>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
+                                           0:8] == "<mahlas>" or spl[
+                    s + 1] == "<izafe>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
                     couplet.append(" ")
         charDataset.append(couplet)
     flatText = [charac for coupl in charDataset for charac in coupl]
@@ -42,6 +43,8 @@ def createCharLevelData(fName, pad=False):
     maxLength = np.amax(np.array([len(l) for l in charDataset]))
     for coup in charDataset:
         cplt = [char2idx[c] for c in coup]
+        if BACKWARD:
+            cplt.reverse()
         pad_len = maxLength - len(cplt)
         cplt = np.array(cplt)
         if pad:
@@ -50,12 +53,13 @@ def createCharLevelData(fName, pad=False):
     return np.array(idxDataset), idx2char, char2idx
 
 
-def createSylLevelData(fName):
+def createSylLevelData(fName, pad=True, BACKWARD=True):
     f = open(fName)
     lines = f.readlines()
     f.close()
     sylDataset = list()
-    for l in lines:
+    for i,l in enumerate(lines):
+        l=l.replace("s̲","S")
         couplet = list()
         spl = l.split()
         for s in range(0, len(spl)):
@@ -65,14 +69,16 @@ def createSylLevelData(fName):
                 syls = syl.get_syllables(spl[s])
                 for sy in syls:
                     couplet.append(sy)
-                if spl[s + 1][0] != "<" or spl[s + 1][
-                                           0:8] == "<mahlas>" or spl[s+1]=="<izafe>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
+                if spl[s + 1][0] != "<" or spl[s + 1][0:8] == "<mahlas>" or spl[s + 1] == "<izafe>":  # It is sure that spl[s+1] exists because if not, then spl[s]=="<endCouplet>" and control doesn't enter this if
                     couplet.append(" ")
         sylDataset.append(couplet)
     flatText = [syllable for coupl in sylDataset for syllable in coupl]
     # for sss in sylDataset[0:203]:
     #    print(sss)
-    vocab = ["<PAD>"] + sorted(set(flatText))
+    if pad:
+        vocab = ["<PAD>"] + sorted(set(flatText))
+    else:
+        vocab = sorted(set(flatText))
     # print(len(vocab))
     char2idx = {c: i for i, c in enumerate(vocab)}
     idx2char = np.array(vocab)
@@ -80,9 +86,12 @@ def createSylLevelData(fName):
     maxLength = np.amax(np.array([len(l) for l in sylDataset]))
     for coup in sylDataset:
         cplt = [char2idx[c] for c in coup]
+        if BACKWARD:
+            cplt.reverse()
         pad_len = maxLength - len(cplt)
         cplt = np.array(cplt)
-        cplt = np.pad(cplt, (0, pad_len), constant_values=(0, 0))
+        if pad:
+            cplt = np.pad(cplt, (0, pad_len), constant_values=(0, 0))
         idxDataset.append(cplt)
     return np.array(idxDataset), idx2char, char2idx
 
@@ -155,9 +164,8 @@ def buildGRUModelWithEmbedding(vocab_size, embedding_dim, rnn_units, batch_size,
 
 
 if __name__ == "__main__":
-    createOTAPDataFromIndividualTexts(False)
-
-    """LEVEL = "SYL"
+    createOTAPDataFromIndividualTexts()
+    LEVEL = "SYL"
     if LEVEL == "SYL":
         data, idx2char, char2idx = createSylLevelData("data/OTAP clean data/total")
     elif LEVEL == "CHAR":
@@ -224,4 +232,4 @@ if __name__ == "__main__":
     EPOCHS = 50
     for i in char2idx.keys():
         print(i)
-    # hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])"""
+    # hist = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
