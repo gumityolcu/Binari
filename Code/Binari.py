@@ -1,3 +1,5 @@
+# THIS BINARY USES WORD LEVEL FSM TO SELECT TOKENS
+
 import tensorflow as tf
 import FST
 import syllabliser as syl
@@ -20,7 +22,7 @@ def get_probability(logits, index):
 # Given a hidden state of GRU and a list of token indices,
 # returns the score given to those tokens and the new hidden state after processing those tokens
 def getScore(mdl, h,
-             tokens):
+             tokens, normalize=True):
     mdl.layers[1].reset_states(states=h)
     score = 0.0
     for t in tokens:
@@ -30,6 +32,8 @@ def getScore(mdl, h,
         p = tf.squeeze(tf.nn.softmax(logits), 0)[t]
         score += np.log(p)
         mdl(tf.expand_dims(np.array([t]), 0))  # Update model hidden state
+    if normalize:
+        score/=len(tokens)
     return mdl.layers[1].states[0].numpy(), score
 
 
@@ -160,7 +164,7 @@ def selectBeams(beams, size):
         return ret
 
 
-def generateCouplet(fst, langModel, BEAMSIZE=5, BACKWARD=True):
+def generateCouplet(fst, langModel, char2idx, BEAMSIZE=5, BACKWARD=True):
     stateShape = langModel.layers[1].states[0].numpy().shape
     s_0 = np.zeros(shape=stateShape)
     langModel.layers[1].reset_states(states=s_0)
@@ -187,11 +191,14 @@ def generateCouplet(fst, langModel, BEAMSIZE=5, BACKWARD=True):
     return beams
 
 
+
+
+# Word FSM main
 if __name__ == "__main__":
     start=time.time()
-    LEVEL = "SYL"
+    LEVEL = "CHAR"
     BACKWARD=True
-    EP=500
+    EP=1000
     BEAMSIZE=5
     DATA="real" #toy or real
     checkpoint_path = "Code/Checkpoints/"
@@ -230,22 +237,54 @@ if __name__ == "__main__":
         outp = "./data/OTAP clean data/wordList.txt"
     else:
         outp = "./data/tempWordList.txt"
-    # FST.makeWordList("./data/OTAP clean data/total-transcription", outp)
+    FST.makeWordList("./data/OTAP clean data/total", outp)
     #vezn = FST.mefailunmefailun
-    vezn=FST.failatunfailatun
+    vezn=FST.mefailunmefailun
     fst = FST.FST(vezn, outp)
+    constraint1 = "cān"
+    constraint2 = "sūzān"
+    fst.constrain(0,constraint1)
+    fst.constrain(1,constraint2)
     if BACKWARD:
         fst.reverse()
-    beyts=generateCouplet(fst,langModel,BEAMSIZE=BEAMSIZE, BACKWARD=BACKWARD)
-    f=open("./Code/Experiments/Exp3 (GRU-Syllable-500-Backward-Transcription)/results","w")
+    beyts=generateCouplet(fst,langModel,char2idx,BEAMSIZE=BEAMSIZE, BACKWARD=BACKWARD)
+    end=time.time()
+    f=open("./Code/Experiments/Real Experiments/Exp2/results","w")
     f.write("Beam size: "+str(BEAMSIZE)+"\n")
+    f.write("Constraints:\n")
+    f.write("Constraint on line 1: ")
+    if constraint1=="":
+        f.write("None")
+    else:
+        f.write(constraint1)
+    f.write("\n")
+    f.write("Constraint on line 2: ")
+    if constraint2=="":
+        f.write("None")
+    else:
+        f.write(constraint2)
+    f.write("\n")
     for b,_,_,sc in beyts:
         if BACKWARD:
             b.reverse()
         print(str(b)+" "+str(sc))
-        f.write(str(b)+"\t"+str(sc)+"\n")
+        for x in b:
+            f.write(x)
+        f.write("\t")
+        f.write(str(sc))
+        f.write("\n")
     f.close()
-    end=time.time()
     print("Time elapsed in seconds : "+str(start-end))
     print("Time elapsed in minutes : "+str((start-end)*1.0/60))
     print("Time elapsed in hours : "+str((start-end)*1.0/3600))
+
+
+
+
+
+
+
+
+"""
+
+"""

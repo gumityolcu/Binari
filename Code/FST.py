@@ -1,5 +1,6 @@
 import syllabliser
 import random
+import model
 import copy
 
 mefulumefailu = ["-", "-", ".", ".", "-", "-", ".", ".", "-", "-", ".", ".", "-", "-"]
@@ -66,6 +67,7 @@ class FST:
         # Create vocabulary
         self.vocabulary = list()
         for x in plainWords:
+            y=x
             x = x.strip()
             self.vocabulary.append((x, syllabliser.get_aruz(x)))
         self.vocabulary.append(("<beginCouplet>",[]))
@@ -175,6 +177,8 @@ class FST:
         return -1
 
     def constrain(self, line, inWords):
+        if inWords=="":
+            return
         interval_init = 1 + line * (len(self.metre) + 1)
         interval_end = interval_init + len(self.metre)
 
@@ -219,17 +223,23 @@ class FST:
 
 if __name__=='__main__':
     outp = "./data/tempWordList.txt"
-    # FST.makeWordList("./data/OTAP clean data/total-transcription", outp)
+    makeWordList("./data/OTAP clean data/total", outp)
     # vezn = FST.mefailunmefailun
-    vezn = failatun
+    vezn = failatunfailatun
     fst = FST(vezn, outp)
-    # fst.constrain(0, 'ki bil dil bil')
-    # fst.constrain(1,'bil bil')
-    print(str(fst))
+    constraint1 = "ḫān mısın kāfir"
+    constraint2 = "sūzān mısın kāfir"
+    fst.constrain(0, constraint1)
+    fst.constrain(1, constraint2)
+    #print(str(fst))
+    print(fst.generate())
     print("\n**********************\n")
     fst.reverse()
+    print(fst.generate())
     fst.reverse()
+    print(fst.generate())
     print(str(fst))
+
 
 
 

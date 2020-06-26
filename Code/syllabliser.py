@@ -97,6 +97,7 @@ def get_aruz(word):
     word = word.replace('·', '')
     word = word.replace('-', '')
     word = word.replace('\'', '')
+    word = word.replace(' ', '')
     sylls = get_syllables(word)
     aruz = list()
     for i in sylls:
@@ -114,7 +115,6 @@ def get_aruz(word):
                 aruz.append("-.")
             else:
                 aruz.append("-")
-
     return aruz
 
 if __name__=="__main__":

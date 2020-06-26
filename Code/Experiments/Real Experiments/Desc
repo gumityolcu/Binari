@@ -1,0 +1,13 @@
+Folder names are: <FSMLevel>FSM-<RNNLevel>GRU-<EPOCHS>
+
+All are generated backwards
+
+1- WordFSM-CharGRU-500
+2- WordFSM-CharGRU-1000
+3- WordFSM-CharGRU-5000
+4- WordFSM-SyllableGRU-500
+5- WordFSM-SyllableGRU-1000
+6- WordFSM-SyllableGRU-5000
+7- SyllabelFSM-SyllableGRU-500
+8- SyllabelFSM-SyllableGRU-1000
+9- SyllabelFSM-SyllableGRU-5000
