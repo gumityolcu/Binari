@@ -33,7 +33,7 @@ def getScore(mdl, h,
         p = tf.squeeze(tf.nn.softmax(logits), 0)[t]
         score += np.log(p)
         mdl(tf.expand_dims(np.array([t]), 0))  # Update model hidden state
-    if normalize:
+    if normalize and len(tokens)>0:
         score /= len(tokens)
     return mdl.layers[1].states[0].numpy(), score
 
@@ -259,16 +259,14 @@ def generateCouplet(metre, langModel, char2idx, BEAMSIZE=5, constraint1="", cons
     init.append("<endLine>")
     spl = constraint2.split()
     spl.reverse()
-    count = 0
     for s in spl:
         if s == "_":
             s = " "
         init.append(s)
-    indexes=[]
+    indexes = []
     for i in init:
         indexes.append(char2idx[i])
     h, sc = getScore(langModel, s_0, indexes)
-
     beam = (init, constraint2Count, h, sc)
     beams = []
     beams.append(beam)
@@ -295,8 +293,8 @@ if __name__ == "__main__":
     start = time.time()
     LEVEL = sys.argv[1]
     BACKWARD = True
-    EP = sys.argv[2]
-    BEAMSIZE = sys.argv[3]
+    EP = int(sys.argv[2])
+    BEAMSIZE = int(sys.argv[3])
     resultPath="./Code/Experiments/Real Experiments/"+sys.argv[4]+"/results"
     RANDOMIZE = False
     DATA = "real"  # toy or real
@@ -342,10 +340,10 @@ if __name__ == "__main__":
             if i != len(syllables) - 1:
                 f.write("\n")
     f.close()
-    constraint1 = "_ cān"
-    constraint1Count=1
-    constraint2 = "_ sū zān"
-    constraint2Count=2
+    constraint1 = ""
+    constraint1Count=0
+    constraint2 = ""
+    constraint2Count=0
     beyts = generateCouplet(vezn, langModel, char2idx, BEAMSIZE=BEAMSIZE, constraint1=constraint1, constraint1Count=constraint1Count, constraint2=constraint2, constraint2Count=constraint2Count, randomize=RANDOMIZE)
     end = time.time()
     f = open(resultPath, "w")

@@ -1,0 +1,6 @@
+Model: GRU
+Model Level: Character
+Epochs: 500
+Direction: Backward
+Data: Transcription
+Metre: Failatun x3 Failun

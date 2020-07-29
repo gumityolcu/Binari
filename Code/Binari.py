@@ -196,11 +196,13 @@ def generateCouplet(fst, langModel, char2idx, BEAMSIZE=5, BACKWARD=True):
 # Word FSM main
 if __name__ == "__main__":
     start=time.time()
-    LEVEL = "CHAR"
-    BACKWARD=True
-    EP=1000
-    BEAMSIZE=5
-    DATA="real" #toy or real
+    LEVEL = sys.argv[1]
+    BACKWARD = True
+    EP = int(sys.argv[2])
+    BEAMSIZE = int(sys.argv[3])
+    resultPath="./Code/Experiments/Real Experiments/"+sys.argv[4]+"/results"
+    RANDOMIZE = False
+    DATA = "real"  # toy or real
     checkpoint_path = "Code/Checkpoints/"
     if LEVEL == "SYL":
         _, idx2char, char2idx = model.createSylLevelData("data/OTAP clean data/total")
@@ -237,19 +239,19 @@ if __name__ == "__main__":
         outp = "./data/OTAP clean data/wordList.txt"
     else:
         outp = "./data/tempWordList.txt"
-    FST.makeWordList("./data/OTAP clean data/total", outp)
+    #FST.makeWordList("./data/OTAP clean data/total", outp)
     #vezn = FST.mefailunmefailun
     vezn=FST.mefailunmefailun
     fst = FST.FST(vezn, outp)
-    constraint1 = "cān"
-    constraint2 = "sūzān"
-    fst.constrain(0,constraint1)
-    fst.constrain(1,constraint2)
+    constraint1 = ""
+    constraint2 = ""
+    #fst.constrain(0,constraint1)
+    #fst.constrain(1,constraint2)
     if BACKWARD:
         fst.reverse()
     beyts=generateCouplet(fst,langModel,char2idx,BEAMSIZE=BEAMSIZE, BACKWARD=BACKWARD)
     end=time.time()
-    f=open("./Code/Experiments/Real Experiments/Exp2/results","w")
+    f=open(resultPath,"w")
     f.write("Beam size: "+str(BEAMSIZE)+"\n")
     f.write("Constraints:\n")
     f.write("Constraint on line 1: ")
